@@ -4,33 +4,6 @@ import { CATEGORIES } from '../constants';
 const modelId = "gemini-2.5-flash";
 
 /**
- * Helper to safely get the AI client.
- * This prevents the app from crashing on startup if process.env is undefined.
- */
-const getAiClient = () => {
-  let apiKey = '';
-  
-  // Try standard process.env (Node/Next/Webpack)
-  if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-    apiKey = process.env.API_KEY;
-  }
-  
-  // Try Vite standard (import.meta.env) just in case
-  // @ts-ignore
-  if (!apiKey && typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
-    // @ts-ignore
-    apiKey = import.meta.env.VITE_API_KEY;
-  }
-
-  // Fallback for demo prevention of crash
-  if (!apiKey) {
-    console.warn("Gemini API Key is missing. Check your environment variables.");
-  }
-    
-  return new GoogleGenAI({ apiKey });
-};
-
-/**
  * Converts a File object to a base64 format compatible with the Gemini SDK.
  */
 export const fileToGenerativePart = async (file: File): Promise<{inlineData: {data: string, mimeType: string}}> => {
@@ -56,8 +29,7 @@ export const fileToGenerativePart = async (file: File): Promise<{inlineData: {da
  * Uses Gemini to analyze an image and generate metadata for a Pin.
  */
 export async function generatePinMetadata(file: File) {
-  // Initialize client here, when needed, not at module level
-  const ai = getAiClient();
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const imagePart = await fileToGenerativePart(file);
 
   const prompt = `Analyze this image for a Pinterest-style visual discovery application.
