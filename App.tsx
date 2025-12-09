@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Search, Plus, User as UserIcon, X, Send, Image as ImageIcon, Globe, Share2, Download } from 'lucide-react';
+import { Search, Plus, User as UserIcon, X, Send, Image as ImageIcon, Globe, Share2, Download, Sparkles, Loader2 } from 'lucide-react';
 import { Pin, Comment, AppState, User, I18N, Language } from './types';
 import { CATEGORIES, TRENDING, makeDemoPins, uid } from './constants';
 import { PinCard } from './components/PinCard';
 import { Modal } from './components/Modal';
+import { generatePinMetadata } from './services/gemini';
 
 // --- Helper for the specific logo style ---
 const Logo = () => (
@@ -44,6 +45,11 @@ export default function App() {
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: '', visible: false });
 
+  // Upload Form State (Controlled for AI Autofill)
+  const [uploadForm, setUploadForm] = useState({ title: '', desc: '', cat: CATEGORIES[0], tags: '', url: '' });
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
   // Infinite Scroll Refs
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -61,6 +67,15 @@ export default function App() {
     localStorage.setItem('comments', JSON.stringify(comments));
     localStorage.setItem('user', JSON.stringify(user));
   }, [likes, saved, comments, user]);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (activeModal !== 'upload') {
+      setUploadForm({ title: '', desc: '', cat: CATEGORIES[0], tags: '', url: '' });
+      setUploadFile(null);
+      setIsAnalyzing(false);
+    }
+  }, [activeModal]);
 
   const showToast = (msg: string) => {
     setToast({ msg, visible: true });
@@ -141,17 +156,10 @@ export default function App() {
 
   const handleUpload = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const title = formData.get('title') as string;
-    const desc = formData.get('desc') as string;
-    const cat = formData.get('cat') as string;
-    const tagsStr = formData.get('tags') as string;
-    const url = formData.get('url') as string;
-    const file = (formData.get('file') as File);
     
-    let src = url;
-    if (file && file.size > 0) {
-      src = URL.createObjectURL(file);
+    let src = uploadForm.url;
+    if (uploadFile) {
+      src = URL.createObjectURL(uploadFile);
     }
 
     if (!src) {
@@ -162,11 +170,11 @@ export default function App() {
     const newPin: Pin = {
       id: uid(),
       src,
-      title: title || 'Nuevo Pin',
-      desc: desc || '',
+      title: uploadForm.title || 'Nuevo Pin',
+      desc: uploadForm.desc || '',
       author: user?.email || 'Tú',
-      cat: cat || CATEGORIES[0],
-      tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
+      cat: uploadForm.cat || CATEGORIES[0],
+      tags: uploadForm.tags.split(',').map(t => t.trim()).filter(Boolean),
       w: 600, h: 800,
       createdAt: Date.now()
     };
@@ -174,6 +182,26 @@ export default function App() {
     setPins(prev => [newPin, ...prev]);
     setActiveModal(null);
     showToast(I18N[lang].toastPublished);
+  };
+
+  const handleMagicFill = async () => {
+    if (!uploadFile) return;
+    try {
+      setIsAnalyzing(true);
+      const metadata = await generatePinMetadata(uploadFile);
+      setUploadForm(prev => ({
+        ...prev,
+        title: metadata.title || prev.title,
+        desc: metadata.description || prev.desc,
+        cat: metadata.category || prev.cat,
+        tags: metadata.tags ? metadata.tags.join(', ') : prev.tags
+      }));
+    } catch (error) {
+      console.error("Gemini analysis failed", error);
+      showToast("AI Analysis failed. Try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
@@ -385,34 +413,93 @@ export default function App() {
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-muted">{I18N[lang].imageFile}</label>
             <div className="relative group">
-              <input type="file" name="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-              <div className="border border-border bg-card rounded-xl p-3 flex items-center gap-2 text-muted group-hover:border-brand/50 transition-colors">
+              <input 
+                type="file" 
+                name="file" 
+                accept="image/*" 
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setUploadFile(file);
+                  if (file) {
+                    setUploadForm(prev => ({...prev, url: ''}));
+                  }
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+              />
+              <div className={`border border-border bg-card rounded-xl p-3 flex items-center gap-2 text-muted group-hover:border-brand/50 transition-colors ${uploadFile ? 'border-brand/50 text-brand' : ''}`}>
                  <ImageIcon size={18} />
-                 <span className="text-sm truncate">Select file...</span>
+                 <span className="text-sm truncate">{uploadFile ? uploadFile.name : 'Select file...'}</span>
               </div>
             </div>
+            
+            <button
+              type="button"
+              onClick={handleMagicFill}
+              disabled={!uploadFile || isAnalyzing}
+              className={`mt-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                !uploadFile 
+                ? 'bg-card text-muted opacity-50 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-brand to-brand2 text-white shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-0.5'
+              }`}
+            >
+               {isAnalyzing ? <Loader2 size={14} className="animate-spin"/> : <Sparkles size={14} />}
+               {isAnalyzing ? I18N[lang].aiAnalyzing : I18N[lang].aiGenerate}
+            </button>
+
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-muted">{I18N[lang].imageUrl}</label>
-            <input name="url" type="url" placeholder="https://..." className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors" />
+            <input 
+              name="url" 
+              type="url" 
+              placeholder="https://..." 
+              value={uploadForm.url}
+              onChange={e => setUploadForm({...uploadForm, url: e.target.value})}
+              className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors" 
+            />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-muted">{I18N[lang].title}</label>
-            <input name="title" type="text" placeholder="My cool pin" className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors" />
+            <input 
+              name="title" 
+              type="text" 
+              placeholder="My cool pin" 
+              value={uploadForm.title}
+              onChange={e => setUploadForm({...uploadForm, title: e.target.value})}
+              className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors" 
+            />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-muted">{I18N[lang].category}</label>
-            <select name="cat" className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors appearance-none">
+            <select 
+              name="cat" 
+              value={uploadForm.cat}
+              onChange={e => setUploadForm({...uploadForm, cat: e.target.value})}
+              className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors appearance-none"
+            >
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-2 md:col-span-2">
             <label className="text-sm font-medium text-muted">{I18N[lang].desc}</label>
-            <textarea name="desc" rows={3} className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors resize-none"></textarea>
+            <textarea 
+              name="desc" 
+              rows={3} 
+              value={uploadForm.desc}
+              onChange={e => setUploadForm({...uploadForm, desc: e.target.value})}
+              className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors resize-none"
+            ></textarea>
           </div>
           <div className="flex flex-col gap-2 md:col-span-2">
             <label className="text-sm font-medium text-muted">{I18N[lang].tagsLabel}</label>
-            <input name="tags" type="text" placeholder="art, design, minimal" className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors" />
+            <input 
+              name="tags" 
+              type="text" 
+              placeholder="art, design, minimal" 
+              value={uploadForm.tags}
+              onChange={e => setUploadForm({...uploadForm, tags: e.target.value})}
+              className="bg-card border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-brand transition-colors" 
+            />
           </div>
         </form>
       </Modal>

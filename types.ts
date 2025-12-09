@@ -70,7 +70,9 @@ export const I18N = {
     toastLinkCopied: "Enlace copiado",
     toastPublished: "Pin publicado",
     toastLogin: "Sesión iniciada (demo)",
-    toastFill: "Completa todos los campos"
+    toastFill: "Completa todos los campos",
+    aiGenerate: "Autocompletar con IA",
+    aiAnalyzing: "Analizando imagen..."
   },
   en: {
     categories: "Categories",
@@ -108,6 +110,8 @@ export const I18N = {
     toastLinkCopied: "Link copied",
     toastPublished: "Pin published",
     toastLogin: "Logged in (demo)",
-    toastFill: "Fill all fields"
+    toastFill: "Fill all fields",
+    aiGenerate: "Magic Autofill",
+    aiAnalyzing: "Analyzing image..."
   }
 };
