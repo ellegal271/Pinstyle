@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>PinStyle — App tipo Pinterest</title>
     <meta name="description" content="App estilo Pinterest con cuadrícula masonry, subida, guardar, compartir y detalles." />
+    <script>
+      // Polyfill simple para evitar "ReferenceError: process is not defined" en el navegador
+      window.process = window.process || { env: {} };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {

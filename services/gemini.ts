@@ -1,10 +1,20 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { CATEGORIES } from '../constants';
 
-// Initialize the client with the API key from the environment
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 const modelId = "gemini-2.5-flash";
+
+/**
+ * Helper to safely get the AI client.
+ * This prevents the app from crashing on startup if process.env is undefined.
+ */
+const getAiClient = () => {
+  // Ensure we don't crash if process is missing in the browser environment
+  const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) 
+    ? process.env.API_KEY 
+    : '';
+    
+  return new GoogleGenAI({ apiKey });
+};
 
 /**
  * Converts a File object to a base64 format compatible with the Gemini SDK.
@@ -32,6 +42,8 @@ export const fileToGenerativePart = async (file: File): Promise<{inlineData: {da
  * Uses Gemini to analyze an image and generate metadata for a Pin.
  */
 export async function generatePinMetadata(file: File) {
+  // Initialize client here, when needed, not at module level
+  const ai = getAiClient();
   const imagePart = await fileToGenerativePart(file);
 
   const prompt = `Analyze this image for a Pinterest-style visual discovery application.
