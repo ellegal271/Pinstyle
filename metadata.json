@@ -1,0 +1,5 @@
+{
+  "name": "PinStyle",
+  "description": "A Pinterest-style application with masonry grid, pin management, and social features.",
+  "requestFramePermissions": []
+}
