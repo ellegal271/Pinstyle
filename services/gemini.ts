@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { CATEGORIES } from '../constants';
 
 // Initialize the client with the API key from the environment
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const modelId = "gemini-2.5-flash";
 
