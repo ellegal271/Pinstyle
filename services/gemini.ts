@@ -8,10 +8,24 @@ const modelId = "gemini-2.5-flash";
  * This prevents the app from crashing on startup if process.env is undefined.
  */
 const getAiClient = () => {
-  // Ensure we don't crash if process is missing in the browser environment
-  const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) 
-    ? process.env.API_KEY 
-    : '';
+  let apiKey = '';
+  
+  // Try standard process.env (Node/Next/Webpack)
+  if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+    apiKey = process.env.API_KEY;
+  }
+  
+  // Try Vite standard (import.meta.env) just in case
+  // @ts-ignore
+  if (!apiKey && typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+    // @ts-ignore
+    apiKey = import.meta.env.VITE_API_KEY;
+  }
+
+  // Fallback for demo prevention of crash
+  if (!apiKey) {
+    console.warn("Gemini API Key is missing. Check your environment variables.");
+  }
     
   return new GoogleGenAI({ apiKey });
 };
