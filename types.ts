@@ -17,7 +17,10 @@ export interface Pin {
 }
 
 export interface User {
+  uid?: string;
   email: string;
+  displayName?: string | null;
+  photoURL?: string | null;
 }
 
 export interface AppState {
@@ -50,7 +53,7 @@ export const I18N = {
     loginTitle: "Iniciar sesión",
     searchPlaceholder: "Buscar ideas, temas, autores...",
     upload: "Subir",
-    login: "Iniciar sesión",
+    login: "Entrar",
     logout: "Salir",
     close: "Cerrar",
     publish: "Publicar",
@@ -63,16 +66,18 @@ export const I18N = {
     tagsLabel: "Etiquetas (separadas por coma)",
     email: "Email",
     password: "Contraseña",
-    enter: "Entrar",
-    demoNote: "Demo sin backend: simula estado conectado.",
+    enter: "Continuar con Google",
+    demoNote: "Configura Firebase en services/firebase.ts para persistencia real.",
     toastSaved: "Guardado",
     toastUnsaved: "Quitado de guardados",
     toastLinkCopied: "Enlace copiado",
     toastPublished: "Pin publicado",
-    toastLogin: "Sesión iniciada (demo)",
+    toastLogin: "Bienvenido",
+    toastLoginRequired: "Debes iniciar sesión para subir pines",
     toastFill: "Completa todos los campos",
     aiGenerate: "Autocompletar con IA",
-    aiAnalyzing: "Analizando imagen..."
+    aiAnalyzing: "Analizando imagen...",
+    configMissing: "Modo Demo: Configura Firebase para guardar datos reales."
   },
   en: {
     categories: "Categories",
@@ -103,15 +108,17 @@ export const I18N = {
     tagsLabel: "Tags (comma separated)",
     email: "Email",
     password: "Password",
-    enter: "Enter",
-    demoNote: "Backendless demo: simulates connected state.",
+    enter: "Continue with Google",
+    demoNote: "Configure Firebase in services/firebase.ts for real persistence.",
     toastSaved: "Saved",
     toastUnsaved: "Removed from saved",
     toastLinkCopied: "Link copied",
     toastPublished: "Pin published",
-    toastLogin: "Logged in (demo)",
+    toastLogin: "Welcome",
+    toastLoginRequired: "You must login to upload pins",
     toastFill: "Fill all fields",
     aiGenerate: "Magic Autofill",
-    aiAnalyzing: "Analyzing image..."
+    aiAnalyzing: "Analyzing image...",
+    configMissing: "Demo Mode: Configure Firebase to save real data."
   }
 };

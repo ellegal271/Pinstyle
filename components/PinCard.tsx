@@ -42,12 +42,12 @@ export const PinCard: React.FC<PinCardProps> = ({
 
   return (
     <div className="break-inside-avoid mb-4 group">
-      <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-lg hover:border-[#3a4258] transition-colors duration-200">
+      <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-lg hover:border-[#3a4258] hover:-translate-y-1 hover:shadow-2xl transition-all duration-300">
         <div className="relative overflow-hidden cursor-zoom-in" onClick={() => onOpen(pin.id)}>
            <img 
             src={pin.src} 
             alt={pin.title} 
-            className="w-full h-auto block object-cover bg-card hover:scale-105 transition-transform duration-500"
+            className="w-full h-auto block object-cover bg-card group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
