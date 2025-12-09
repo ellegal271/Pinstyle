@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Search, Plus, User as UserIcon, X, Send, Image as ImageIcon, Globe, Share2, Download, Sparkles, Loader2, LogOut, Check, AlertTriangle } from 'lucide-react';
+import { Search, Plus, User as UserIcon, X, Send, Image as ImageIcon, Globe, Share2, Download, Sparkles, Loader2, LogOut, Check } from 'lucide-react';
 import { Pin, Comment, AppState, User, I18N, Language } from './types';
 import { CATEGORIES, TRENDING, makeDemoPins, uid } from './constants';
 import { PinCard } from './components/PinCard';
@@ -149,10 +149,6 @@ export default function App() {
     } else {
       // Demo Mode
       setPins(makeDemoPins(24));
-      if (!isLoading) {
-        // Show toast once loaded if not configured
-        // setTimeout(() => showToast(I18N[lang].configMissing), 1000);
-      }
     }
   }, [isLoading]);
 
@@ -411,16 +407,6 @@ export default function App() {
 
       {/* Main Grid */}
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {!isConfigured && (
-           <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-lg flex items-start gap-3">
-             <AlertTriangle className="text-warn shrink-0" size={20} />
-             <div>
-                <p className="text-sm text-warn font-semibold">Firebase no está configurado</p>
-                <p className="text-xs text-muted mt-1">La app está funcionando en <strong>Modo Demo</strong> (sin base de datos real). Para activar el Login de Google y guardar datos en la nube, edita el archivo <code>services/firebase.ts</code> con tus claves.</p>
-             </div>
-           </div>
-        )}
-      
         <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
           {filteredPins.map(pin => (
             <PinCard 
@@ -468,9 +454,7 @@ export default function App() {
           <div className="text-center px-6">
             <h3 className="text-xl font-bold mb-2">{I18N[lang].loginTitle}</h3>
             <p className="text-muted text-sm">
-              {isConfigured 
-                ? "Guarda tus pines favoritos y accede desde cualquier dispositivo."
-                : "Modo Demo activo. El login es simulado."}
+              Guarda tus pines favoritos, crea tableros y accede a tu inspiración desde cualquier dispositivo.
             </p>
           </div>
 
@@ -489,7 +473,7 @@ export default function App() {
           </button>
           
           <p className="text-xs text-muted/50 max-w-xs text-center">
-            {isConfigured ? "Powered by Firebase Auth & Firestore" : I18N[lang].demoNote}
+             Powered by Firebase Auth & Firestore
           </p>
         </div>
       </Modal>
